@@ -1312,7 +1312,7 @@
         <li>Go to <a href="https://console.cloud.google.com/google/maps-apis/start" target="_blank" rel="noopener">Google Maps Platform</a> and create a project (or pick one you have).</li>
         <li>Enable both <code>Places API (New)</code> and <code>Maps JavaScript API</code> in the API library.</li>
         <li>Under <strong>Credentials</strong>, create an API key.</li>
-        <li>Click the key → <strong>Application restrictions</strong> → <strong>Websites</strong> → add your site (e.g. <code>https://yourname.github.io/*</code>). This locks the key to your domain so no one else can use it.</li>
+        <li>Click the key → <strong>Application restrictions</strong> → <strong>Websites</strong> → add your site (<code id="site-url-example">https://yourname.github.io/*</code>). This locks the key to your domain so no one else can use it.</li>
         <li>Paste the key above and hit <strong>Save key</strong>.</li>
       </ol>
       <div class="costs">Google gives a generous monthly credit that typically covers personal use for free. Autocomplete uses session tokens so a full search-and-pick counts as one billed session, not one per keystroke.</div>
@@ -1423,11 +1423,22 @@
         input: q,
         sessionToken: this.sessionToken(),
       };
+      // Country filter — hard filter, the strongest lever we have against
+      // "coffee in NYC" noise for users outside the US. Google Maps itself
+      // defaults to this behavior based on the user's country.
+      if (searchBias && searchBias.countryCode) {
+        body.includedRegionCodes = [searchBias.countryCode];
+      }
+      // Location bias — preference (not restriction). Short queries are
+      // ambiguous, so we tighten the radius so Google has stronger signal
+      // to prefer nearby results. Longer queries already have enough
+      // specificity that a wider metro-area radius is fine.
       if (searchBias) {
+        const radius = q.length <= 4 ? 20000 : 50000; // 20km vs 50km
         body.locationBias = {
           circle: {
             center: { latitude: searchBias.lat, longitude: searchBias.lon },
-            radius: 50000, // 50km — metro-area scope
+            radius,
           },
         };
       }
@@ -2103,14 +2114,25 @@
   // when browser geolocation is denied or unavailable.
   async function ipLocate() {
     // Try a few free, no-key, CORS-enabled services in order.
+    // Returns { lat, lon, label, countryCode }. countryCode is a
+    // lowercase ISO 3166-1 alpha-2 code (e.g. "id" for Indonesia) used
+    // for Google Places `includedRegionCodes`.
     const providers = [
       {
         url: 'https://ipapi.co/json/',
-        parse: d => ({ lat: d.latitude, lon: d.longitude, label: [d.city, d.country_name].filter(Boolean).join(', ') }),
+        parse: d => ({
+          lat: d.latitude, lon: d.longitude,
+          label: [d.city, d.country_name].filter(Boolean).join(', '),
+          countryCode: (d.country_code || d.country || '').toLowerCase() || null,
+        }),
       },
       {
         url: 'https://ipwho.is/',
-        parse: d => d.success ? ({ lat: d.latitude, lon: d.longitude, label: [d.city, d.country].filter(Boolean).join(', ') }) : null,
+        parse: d => d.success ? ({
+          lat: d.latitude, lon: d.longitude,
+          label: [d.city, d.country].filter(Boolean).join(', '),
+          countryCode: (d.country_code || '').toLowerCase() || null,
+        }) : null,
       },
     ];
     for (const p of providers) {
@@ -2607,6 +2629,19 @@
   // Initial render
   renderStops();
   refreshProviderLabel();
+
+  // Personalize the tutorial's example URL to match the actual deployed site.
+  // If opened via file://, fall back to the generic example so it still reads sensibly.
+  (() => {
+    const el = $('site-url-example');
+    if (!el) return;
+    const host = location.hostname;
+    if (!host || host === 'localhost' || host === '127.0.0.1' || location.protocol === 'file:') {
+      // Keep the generic placeholder — the user isn't on a real deploy yet.
+      return;
+    }
+    el.textContent = `${location.protocol}//${host}/*`;
+  })();
 })();
 </script>
 
