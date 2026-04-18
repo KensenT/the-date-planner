@@ -2334,19 +2334,28 @@
         try {
           const loc = await getUserLocation();
           state.userLocation = loc;
+          // Upgrade searchBias with precise coordinates. This tightens the
+          // Google Places locationBias circle around where the user actually
+          // is, instead of the timezone's implied country center.
+          if (searchBias) {
+            searchBias.lat = loc.lat;
+            searchBias.lon = loc.lon;
+            // Reflect the upgrade in the UI hint.
+            const hintEl = document.getElementById('search-hint');
+            if (hintEl) {
+              const pin = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+              hintEl.innerHTML = `${pin}Showing results near your location`;
+              hintEl.classList.add('shown');
+            }
+          }
           hideError();
         } catch (err) {
-          // Try IP-based fallback so we at least have a city-accurate origin
-          let fallback = null;
-          try { fallback = await ipLocate(); } catch (_) {}
-          if (fallback) {
-            state.userLocation = fallback;
-            showError(`Using your approximate location (${fallback.label || 'city-level accuracy'}). For a more precise start, allow location access — this page must also be served over https:// or localhost.`);
-          } else {
-            state.userLocation = null;
-            document.querySelector('input[name="start-mode"][value="first"]').checked = true;
-            showError(explainGeoError(err));
-          }
+          // Browser geolocation denied/unavailable. Keep the timezone-based
+          // country code for search biasing; nothing to fall back to for
+          // the user's start-point coords specifically.
+          state.userLocation = null;
+          document.querySelector('input[name="start-mode"][value="first"]').checked = true;
+          showError(explainGeoError(err));
         }
       }
     });
@@ -2382,110 +2391,67 @@
     });
   }
 
-  // IP-based coarse geolocation. No permission prompt, no key.
-  // Used (a) to bias search results at page load, and (b) as a fallback
-  // when browser geolocation is denied or unavailable.
-  // IP-based coarse geolocation. No permission prompt, no key.
-  // Used (a) to bias search results at page load, and (b) as a fallback
-  // when browser geolocation is denied or unavailable.
+  // Coarse geolocation for biasing search results. No network calls — uses
+  // only the browser's own timezone setting to derive a country code.
   //
-  // Strategy: try multiple providers in parallel-ish order. Country code
-  // is the most valuable signal (it enables Google's hard region filter
-  // via includedRegionCodes), so we go to lengths to get it — including
-  // a zero-network fallback using the browser's own timezone setting.
+  // Why no IP providers? Every free-tier IP lookup service either blocks
+  // CORS from static sites (like GitHub Pages) or requires an API key.
+  // We tried four providers and all either failed or threw loud console
+  // errors even though the app kept working via timezone fallback. Since
+  // the timezone derivation is reliable enough for country-level search
+  // biasing — our only actual use case — we skip IP lookup entirely.
+  //
+  // If the user grants "My current location" later, we get precise
+  // coordinates from the browser's Geolocation API and upgrade `searchBias`
+  // with real lat/lon, which improves Google Places' `locationBias` signal.
   async function ipLocate() {
-    // Providers return { lat?, lon?, label?, countryCode? }. lat/lon are
-    // optional because country-only providers like country.is are a
-    // valuable fallback even without coords.
-    const providers = [
-      {
-        // Full lat/lon + country. CORS-enabled, no key.
-        name: 'freeipapi.com',
-        url: 'https://freeipapi.com/api/json',
-        parse: d => ({
-          lat: d.latitude, lon: d.longitude,
-          label: [d.cityName, d.countryName].filter(Boolean).join(', '),
-          countryCode: (d.countryCode || '').toLowerCase() || null,
-        }),
-      },
-      {
-        // Country-only. Ultra-lightweight, very reliable CORS.
-        name: 'country.is',
-        url: 'https://api.country.is/',
-        parse: d => ({
-          lat: null, lon: null, label: null,
-          countryCode: (d.country || '').toLowerCase() || null,
-        }),
-      },
-      {
-        // Full geolocation — kept as a fallback even though it sometimes
-        // blocks CORS, because it works from many origins.
-        name: 'ipapi.co',
-        url: 'https://ipapi.co/json/',
-        parse: d => ({
-          lat: d.latitude, lon: d.longitude,
-          label: [d.city, d.country_name].filter(Boolean).join(', '),
-          countryCode: (d.country_code || d.country || '').toLowerCase() || null,
-        }),
-      },
-      {
-        name: 'ipwho.is',
-        url: 'https://ipwho.is/',
-        parse: d => d.success ? ({
-          lat: d.latitude, lon: d.longitude,
-          label: [d.city, d.country].filter(Boolean).join(', '),
-          countryCode: (d.country_code || '').toLowerCase() || null,
-        }) : null,
-      },
-    ];
-
-    // Accumulate the best result we've gotten so far. If we get a full
-    // result (lat/lon + country), return immediately. If we only get
-    // country, keep it and try the next provider for coords.
-    let best = null;
-    for (const p of providers) {
-      try {
-        const res = await fetch(p.url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        const loc = p.parse(data);
-        if (!loc) continue;
-        // Merge into best — later providers fill in gaps
-        best = {
-          lat: loc.lat ?? best?.lat ?? null,
-          lon: loc.lon ?? best?.lon ?? null,
-          label: loc.label ?? best?.label ?? null,
-          countryCode: loc.countryCode ?? best?.countryCode ?? null,
-        };
-        // If we have everything, stop.
-        if (typeof best.lat === 'number' && typeof best.lon === 'number' && best.countryCode) {
-          return best;
-        }
-      } catch (_) { /* try next */ }
+    let tz;
+    try {
+      tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch (_) {
+      throw new Error('Cannot determine timezone');
     }
-
-    // Last-resort fallback: derive country from the browser's timezone.
-    // This works even when every network provider is blocked, and costs
-    // nothing. It's not perfect (some timezones span multiple countries)
-    // but it's an excellent default for the Google region filter.
-    if (!best || !best.countryCode) {
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const cc = timezoneToCountry(tz);
-        if (cc) {
-          best = best || { lat: null, lon: null, label: null, countryCode: null };
-          best.countryCode = best.countryCode || cc;
-          if (!best.label) {
-            // Convert "Asia/Jakarta" → "Jakarta" for a cleaner user-facing label.
-            const city = tz.split('/').pop().replace(/_/g, ' ');
-            best.label = city;
-          }
-        }
-      } catch (_) { /* Intl unavailable — give up */ }
+    const cc = timezoneToCountry(tz);
+    if (!cc) {
+      throw new Error(`Timezone "${tz}" not recognized`);
     }
+    // Use the country name as the label, NOT the timezone's city. "Asia/Jakarta"
+    // is the zone name for all of Western Indonesia (Jakarta, Bandung, Surabaya,
+    // Medan all share it), so calling it "Jakarta" would be misleading to users
+    // elsewhere in the country. Country-level accuracy is honest: that's
+    // genuinely all we know without a permission prompt.
+    return {
+      lat: null,
+      lon: null,
+      label: countryNameFromCode(cc) || null,
+      countryCode: cc,
+    };
+  }
 
-    if (best) return best;
-    throw new Error('All IP lookup providers failed and timezone lookup yielded no country');
+  // ISO 3166-1 alpha-2 → full country name, for the countries we support
+  // via timezoneToCountry. If a code isn't covered, fall back to the code
+  // itself (which the hint logic then handles gracefully).
+  function countryNameFromCode(cc) {
+    if (!cc) return null;
+    const names = {
+      id:'Indonesia', sg:'Singapore', my:'Malaysia', th:'Thailand',
+      vn:'Vietnam', ph:'the Philippines', jp:'Japan', kr:'South Korea',
+      cn:'China', hk:'Hong Kong', tw:'Taiwan', in:'India', pk:'Pakistan',
+      bd:'Bangladesh', lk:'Sri Lanka', mm:'Myanmar', kh:'Cambodia', la:'Laos',
+      ae:'the UAE', qa:'Qatar', sa:'Saudi Arabia', ir:'Iran', il:'Israel',
+      lb:'Lebanon', tr:'Türkiye',
+      au:'Australia', nz:'New Zealand',
+      us:'the US', ca:'Canada', mx:'Mexico',
+      br:'Brazil', ar:'Argentina', cl:'Chile', pe:'Peru', co:'Colombia', ve:'Venezuela',
+      gb:'the UK', ie:'Ireland', fr:'France', de:'Germany', es:'Spain', it:'Italy',
+      nl:'the Netherlands', be:'Belgium', at:'Austria', ch:'Switzerland',
+      se:'Sweden', no:'Norway', dk:'Denmark', fi:'Finland',
+      pl:'Poland', cz:'Czechia', hu:'Hungary', gr:'Greece', pt:'Portugal',
+      ru:'Russia', ua:'Ukraine', ro:'Romania',
+      eg:'Egypt', ng:'Nigeria', ke:'Kenya', za:'South Africa',
+      ma:'Morocco', dz:'Algeria', tn:'Tunisia',
+    };
+    return names[cc] || null;
   }
 
   // Maps IANA timezone names to ISO 3166-1 alpha-2 country codes.
@@ -2537,18 +2503,15 @@
         lon: bias.lon,
       });
       const hintEl = document.getElementById('search-hint');
-      if (hintEl) {
+      if (hintEl && bias.label) {
         const pin = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
-        if (bias.label) {
-          hintEl.innerHTML = `${pin}Showing results near ${escapeHtml(bias.label)}`;
-          hintEl.classList.add('shown');
-        } else if (bias.countryCode) {
-          hintEl.innerHTML = `${pin}Showing results in ${escapeHtml(bias.countryCode.toUpperCase())}`;
-          hintEl.classList.add('shown');
-        }
+        // "in X" at country level (honest scope), "near" only once we
+        // have precise coordinates after the user grants current-location.
+        hintEl.innerHTML = `${pin}Showing results in ${escapeHtml(bias.label)}`;
+        hintEl.classList.add('shown');
       }
     } catch (err) {
-      console.warn('IP geolocation unavailable, search results will not be location-biased:', err.message);
+      console.warn('Geolocation unavailable, search results will not be location-biased:', err.message);
     }
   })();
 
@@ -2776,16 +2739,11 @@
         try {
           state.userLocation = await getUserLocation();
         } catch (err) {
-          // Try IP-based fallback before giving up
-          try {
-            state.userLocation = await ipLocate();
-          } catch (_) {
-            optimizeBtn.classList.remove('working');
-            optimizeBtn.innerHTML = 'Find the best route <span class="arrow">→</span>';
-            showError(explainGeoError(err));
-            document.querySelector('input[name="start-mode"][value="first"]').checked = true;
-            return;
-          }
+          optimizeBtn.classList.remove('working');
+          optimizeBtn.innerHTML = 'Find the best route <span class="arrow">→</span>';
+          showError(explainGeoError(err));
+          document.querySelector('input[name="start-mode"][value="first"]').checked = true;
+          return;
         }
       }
       points = [state.userLocation, ...points];
