@@ -108,14 +108,11 @@
     font-weight: 500;
   }
 
-  .masthead .edition .dot {
-    display: inline-block;
-    width: 4px;
-    height: 4px;
-    background: var(--accent);
-    border-radius: 50%;
-    margin: 0 10px;
-    transform: translateY(-3px);
+  .masthead .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: flex-end;
   }
 
   .masthead .date {
@@ -125,6 +122,129 @@
     color: var(--ink-soft);
     text-align: right;
   }
+
+  .header-settings-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .header-settings-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: rotate(45deg);
+  }
+  /* Pulsing dot on the gear when no key is set — subtle nudge toward accuracy setup.
+     Hidden via JS once a key is saved. */
+  .header-settings-btn.has-notification::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+
+  /* ===== Accuracy banner (first-visit hint) ===== */
+  .accuracy-banner {
+    margin-bottom: 36px;
+    display: none;
+    animation: bannerSlide 0.4s ease-out;
+  }
+  .accuracy-banner.shown { display: block; }
+  @keyframes bannerSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .accuracy-banner-inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    box-shadow: var(--shadow);
+  }
+
+  .accuracy-banner-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .accuracy-banner-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .accuracy-banner-text strong {
+    display: block;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .accuracy-banner-text span {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  .accuracy-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .accuracy-banner-cta {
+    padding: 10px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .accuracy-banner-cta:hover { background: var(--accent); }
+
+  .accuracy-banner-dismiss {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    padding: 4px 10px;
+    font-family: serif;
+    transition: color 0.2s;
+  }
+  .accuracy-banner-dismiss:hover { color: var(--accent); }
 
   /* ===== Hero ===== */
   .hero {
@@ -1137,10 +1257,22 @@
   @media (max-width: 860px) {
     .page { padding: 28px 20px 60px; }
     header.masthead {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: "word settings" "edition edition";
       gap: 10px;
     }
-    .masthead .edition, .masthead .date { text-align: left; }
+    .masthead .wordmark { grid-area: word; }
+    .masthead .edition { grid-area: edition; text-align: left; }
+    .masthead .header-right {
+      grid-area: settings;
+      gap: 10px;
+    }
+    .masthead .date { display: none; }
+    .accuracy-banner-inner {
+      flex-wrap: wrap;
+    }
+    .accuracy-banner-text { flex: 1 1 auto; }
+    .accuracy-banner-actions { flex: 0 0 auto; }
     .hero {
       grid-template-columns: 1fr;
       gap: 40px;
@@ -1183,9 +1315,37 @@
       </svg>
       <h1>Petal</h1>
     </div>
-    <div class="edition">The Date Planner <span class="dot"></span> No. 01</div>
-    <div class="date" id="today-date"></div>
+    <div class="edition">The Date Planner</div>
+    <div class="header-right">
+      <div class="date" id="today-date"></div>
+      <button class="header-settings-btn" id="open-settings-header" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
   </header>
+
+  <!-- First-visit hint: surfaces Settings for accuracy improvement. -->
+  <div class="accuracy-banner" id="accuracy-banner">
+    <div class="accuracy-banner-inner">
+      <div class="accuracy-banner-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+      </div>
+      <div class="accuracy-banner-text">
+        <strong>Want sharper results?</strong>
+        <span>Plugging in a Google Maps API key unlocks richer place search and accurate pins. Takes two minutes.</span>
+      </div>
+      <div class="accuracy-banner-actions">
+        <button class="accuracy-banner-cta" id="accuracy-banner-open">Set it up</button>
+        <button class="accuracy-banner-dismiss" id="accuracy-banner-dismiss" aria-label="Dismiss">×</button>
+      </div>
+    </div>
+  </div>
 
   <section class="hero">
     <div>
@@ -1568,11 +1728,12 @@
   const providerLabel = $('search-provider-label');
 
   function refreshProviderLabel() {
-    if (googleSearch.isActive()) {
-      providerLabel.textContent = 'Google Places';
-    } else {
-      providerLabel.textContent = 'OpenStreetMap';
-    }
+    const active = googleSearch.isActive();
+    providerLabel.textContent = active ? 'Google Places' : 'OpenStreetMap';
+    // Notification dot on the header settings button when no key is set —
+    // subtle signal that there's an unused upgrade available.
+    const gearBtn = document.getElementById('open-settings-header');
+    if (gearBtn) gearBtn.classList.toggle('has-notification', !active);
   }
 
   function setSettingsStatus(kind, message) {
@@ -1604,12 +1765,43 @@
     e.preventDefault();
     openSettings();
   });
+  $('open-settings-header').addEventListener('click', (e) => {
+    e.preventDefault();
+    openSettings();
+  });
   $('close-settings').addEventListener('click', closeSettings);
   settingsOverlay.addEventListener('click', (e) => {
     if (e.target === settingsOverlay) closeSettings();
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && settingsOverlay.classList.contains('shown')) closeSettings();
+  });
+
+  // ---------- First-visit accuracy banner ----------
+  // Shown once to any user who hasn't configured a key and hasn't dismissed it.
+  // Stored in localStorage so it never nags a returning user.
+  const BANNER_DISMISS_KEY = 'petal.accuracyBannerDismissed';
+
+  function showAccuracyBannerIfAppropriate() {
+    // Don't show if: key already configured, or banner was previously dismissed
+    if (googleSearch.isActive()) return;
+    let dismissed = false;
+    try { dismissed = localStorage.getItem(BANNER_DISMISS_KEY) === '1'; } catch (_) {}
+    if (dismissed) return;
+    $('accuracy-banner').classList.add('shown');
+  }
+
+  function hideAccuracyBanner(persist) {
+    $('accuracy-banner').classList.remove('shown');
+    if (persist) {
+      try { localStorage.setItem(BANNER_DISMISS_KEY, '1'); } catch (_) {}
+    }
+  }
+
+  $('accuracy-banner-dismiss').addEventListener('click', () => hideAccuracyBanner(true));
+  $('accuracy-banner-open').addEventListener('click', () => {
+    hideAccuracyBanner(true);
+    openSettings();
   });
 
   $('save-key-btn').addEventListener('click', async () => {
@@ -1624,6 +1816,7 @@
       googleSearch.setKey(candidate);
       setSettingsStatus('ok', 'Key saved and working. Google Places is now active.');
       refreshProviderLabel();
+      hideAccuracyBanner(true);
     } else {
       setSettingsStatus('bad', `Key didn't work: ${result.message}`);
     }
