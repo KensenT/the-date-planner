@@ -2540,20 +2540,23 @@
   function buildGoogleMapsUrl(r) {
     // https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=a|b|c&travelmode=driving
     //
-    // Accuracy hierarchy:
-    // 1. Place ID (from Google Places) — exact venue pin. Origin/destination
-    //    use the dedicated `_place_id` params; waypoints use the inline
-    //    `place_id:ChIJ...` syntax in the waypoints string.
-    // 2. Raw query text (un-geocodable stops) — Google's own geocoder resolves.
-    // 3. Name + address text (OSM-geocoded stops) — Google re-geocodes for
-    //    better pin placement than raw OSM coordinates would give.
-    // 4. Coordinates — only for user's current-location origin. Coordinates
-    //    passed as the endpoint get snapped to the nearest routable road,
-    //    which is why we avoid them for named stops.
+    // Maps URLs API supports Place IDs via:
+    //   - `origin_place_id` (pairs with `origin`)
+    //   - `destination_place_id` (pairs with `destination`)
+    //   - `waypoint_place_ids` (parallel to `waypoints`, same order, same count)
+    //
+    // The `waypoints=place_id:ChIJ...` inline syntax is from the server-side
+    // Directions API, NOT this URL API — passing it here causes Google Maps
+    // to treat the whole string as a literal search query. That's what we
+    // fixed here.
+    //
+    // `waypoint_place_ids` requires matching count with `waypoints`. We only
+    // emit it when every intermediate stop has a Place ID; if there's a mix,
+    // we fall back to text-only waypoints (still pin-accurate for Google-
+    // sourced stops because Google re-geocodes the name+address).
     const pts = r.order.map(i => r.labels[i]);
 
-    // Text representation of a stop (for origin, destination, or a plain
-    // waypoint). Place IDs are handled separately via distinct URL params.
+    // Text representation of a stop (for origin, destination, or a waypoint).
     const asText = (p) => {
       if (p.isStart && !p.rawQuery && !p.placeId) return `${p.lat},${p.lon}`;
       if (p.rawQuery) return p.rawQuery;
@@ -2574,11 +2577,15 @@
     if (last.placeId) params.set('destination_place_id', last.placeId);
 
     if (middle.length > 0) {
-      const waypoints = middle.map(p => {
-        if (p.placeId) return `place_id:${p.placeId}`;
-        return asText(p);
-      }).join('|');
-      params.set('waypoints', waypoints);
+      const waypointTexts = middle.map(asText);
+      params.set('waypoints', waypointTexts.join('|'));
+
+      // Only emit waypoint_place_ids when every waypoint has one —
+      // otherwise the parallel-array contract might break.
+      const everyHasPlaceId = middle.every(p => !!p.placeId);
+      if (everyHasPlaceId) {
+        params.set('waypoint_place_ids', middle.map(p => p.placeId).join('|'));
+      }
     }
 
     return `https://www.google.com/maps/dir/?${params.toString()}`;
