@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Petal — Plan the perfect date route</title>
+<meta name="description" content="Add the places you and your date want to visit. We'll find the fastest order so you spend more time together and less time in the car." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #f5efe6;
+    --bg-deep: #ede4d3;
+    --ink: #2a1f17;
+    --ink-soft: #5c4a3c;
+    --ink-faint: #8a7563;
+    --accent: #b4432a;
+    --accent-deep: #8a2e1a;
+    --accent-soft: #e8b9a8;
+    --paper: #fbf7f0;
+    --line: #d9cdb8;
+    --line-soft: #e5dcc8;
+    --ok: #5a7a3e;
+    --shadow: 0 1px 2px rgba(42, 31, 23, 0.04), 0 8px 24px rgba(42, 31, 23, 0.06);
+    --shadow-lift: 0 2px 4px rgba(42, 31, 23, 0.06), 0 16px 40px rgba(42, 31, 23, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter Tight', -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(180, 67, 42, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(90, 122, 62, 0.05) 0%, transparent 45%);
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.2 0 0 0 0 0.15 0 0 0 0 0.1 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Header ===== */
+  header.masthead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: end;
+    gap: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 48px;
+  }
+
+  .wordmark {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .wordmark .mark {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    transform: translateY(4px);
+  }
+
+  .wordmark h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .masthead .edition {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  .masthead .edition .dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin: 0 10px;
+    transform: translateY(-3px);
+  }
+
+  .masthead .date {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  /* ===== Hero ===== */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 64px;
+    margin-bottom: 56px;
+    align-items: start;
+  }
+
+  .hero h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(48px, 6vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+
+  .hero h2 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .hero .lede {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 44ch;
+  }
+
+  .hero .lede::first-letter {
+    font-family: 'Fraunces', serif;
+    font-size: 56px;
+    float: left;
+    line-height: 0.85;
+    margin-right: 8px;
+    margin-top: 6px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .hero-side {
+    padding-top: 12px;
+  }
+
+  .hero-side .label {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .how-list {
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .how-list li {
+    counter-increment: step;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-soft);
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 16px;
+    align-items: baseline;
+  }
+
+  .how-list li:last-child { border-bottom: none; }
+
+  .how-list li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .how-list li span {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  /* ===== Main composer ===== */
+  .composer {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 40px;
+    position: relative;
+  }
+
+  .composer::before, .composer::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .composer::before { top: -6px; left: -6px; }
+  .composer::after { bottom: -6px; right: -6px; }
+
+  .composer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .composer-head h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+  }
+
+  .composer-head .counter {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  .composer-head .counter strong {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    color: var(--accent);
+    font-size: 16px;
+    margin: 0 2px;
+  }
+
+  /* ===== Input field ===== */
+  .place-input-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .place-input {
+    width: 100%;
+    padding: 16px 130px 16px 52px;
+    font-size: 16px;
+    font-family: 'Inter Tight', sans-serif;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .place-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  .place-input::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  .place-input-wrap .pin-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    pointer-events: none;
+  }
+
+  .add-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 10px 20px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    font-family: 'Inter Tight', sans-serif;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .add-btn:hover { background: var(--accent); }
+  .add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== Suggestions ===== */
+  .suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-lift);
+    z-index: 20;
+    max-height: 280px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .suggestions.active { display: block; }
+
+  .suggestion {
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line-soft);
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    transition: background 0.15s;
+  }
+
+  .suggestion:last-child { border-bottom: none; }
+  .suggestion:hover, .suggestion.highlighted {
+    background: var(--bg-deep);
+    color: var(--ink);
+  }
+
+  .suggestion strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .loading-indicator {
+    position: absolute;
+    right: 110px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .loading-indicator.active { display: block; }
+
+  @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+  /* ===== Starting point selector ===== */
+  .search-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    display: none;
+  }
+
+  .search-hint.shown { display: block; }
+
+  .search-hint svg {
+    vertical-align: -2px;
+    margin-right: 4px;
+    color: var(--accent);
+  }
+
+  .start-controls {
+    display: flex;
+    gap: 20px;
+    padding: 14px 0 4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+
+  .start-controls label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .start-controls input[type="radio"] {
+    accent-color: var(--accent);
+  }
+
+  /* ===== Stops list ===== */
+  .stops-section {
+    margin-top: 28px;
+  }
+
+  .stops-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .stops-header h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 18px;
+    font-style: italic;
+  }
+
+  .stops-header .hint {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .stops-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stop {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--line-soft);
+    transition: all 0.2s;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stop .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--accent);
+    text-align: center;
+  }
+
+  .stop .info {
+    min-width: 0;
+  }
+
+  .stop .info .name {
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stop .info .addr {
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+
+  .stop .remove {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 6px;
+    font-size: 18px;
+    line-height: 1;
+    transition: color 0.2s, transform 0.2s;
+    font-family: serif;
+  }
+
+  .stop .remove:hover { color: var(--accent); transform: scale(1.15); }
+
+  .stops-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-faint);
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    border: 1px dashed var(--line);
+    background: var(--bg);
+  }
+
+  /* ===== Options ===== */
+  .options {
+    display: flex;
+    gap: 24px;
+    padding: 20px 0 0;
+    margin-top: 20px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+
+  .options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .options select {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 13px;
+    padding: 4px 8px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  /* ===== Optimize button ===== */
+  .optimize-row {
+    margin-top: 28px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .optimize-btn {
+    flex: 1;
+    min-width: 240px;
+    padding: 18px 28px;
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .optimize-btn:hover:not(:disabled) {
+    background: var(--accent-deep);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .optimize-btn:disabled {
+    background: var(--line);
+    color: var(--ink-faint);
+    cursor: not-allowed;
+  }
+
+  .optimize-btn .arrow {
+    display: inline-block;
+    margin-left: 6px;
+    transition: transform 0.3s;
+  }
+
+  .optimize-btn:hover:not(:disabled) .arrow {
+    transform: translateX(4px);
+  }
+
+  .optimize-btn.working {
+    pointer-events: none;
+  }
+
+  .optimize-btn.working::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shimmer 1.2s infinite;
+  }
+
+  @keyframes shimmer {
+    to { left: 100%; }
+  }
+
+  .clear-btn {
+    padding: 14px 20px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .clear-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  /* ===== Result ===== */
+  .result {
+    margin-top: 48px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s, transform 0.5s;
+    display: none;
+  }
+
+  .result.shown {
+    opacity: 1;
+    transform: translateY(0);
+    display: block;
+  }
+
+  .result-head {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .result-head .kicker {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .result-head h3 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(36px, 4vw, 52px);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+
+  .result-head .subtitle {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--ink-soft);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+  }
+
+  /* Summary stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-bottom: 36px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stat {
+    padding: 24px 20px;
+    text-align: center;
+    border-right: 1px solid var(--line);
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat .num {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .stat .num em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .stat .num .unit {
+    font-size: 18px;
+    color: var(--ink-faint);
+    margin-left: 2px;
+    font-style: italic;
+  }
+
+  .stat .lbl {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  .stat .sublbl {
+    font-size: 12px;
+    color: var(--ok);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  /* Route timeline */
+  .timeline {
+    position: relative;
+    padding: 0 0 0 4px;
+    margin-bottom: 36px;
+  }
+
+  .timeline-item {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 20px;
+    position: relative;
+    padding-bottom: 4px;
+  }
+
+  .timeline-item .marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .timeline-item .marker .dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 15px;
+    font-style: italic;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .timeline-item.start .marker .dot,
+  .timeline-item.end .marker .dot {
+    background: var(--accent);
+    color: var(--paper);
+  }
+
+  .timeline-item .marker .line {
+    width: 1px;
+    flex: 1;
+    background: var(--line);
+    min-height: 40px;
+  }
+
+  .timeline-item:last-child .marker .line { display: none; }
+
+  .timeline-item .content {
+    padding: 4px 0 36px;
+  }
+
+  .timeline-item .stop-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .timeline-item .stop-addr {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .timeline-item .travel {
+    margin-top: 14px;
+    padding: 8px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+  }
+
+  .timeline-item .travel .arrow-icon {
+    color: var(--accent);
+  }
+
+  /* Open in maps */
+  .maps-link {
+    display: block;
+    padding: 20px 28px;
+    background: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    text-align: center;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 500;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .maps-link:hover {
+    background: var(--accent);
+  }
+
+  .maps-link .g-icon {
+    display: inline-block;
+    margin-right: 10px;
+    vertical-align: -3px;
+  }
+
+  .maps-link em {
+    font-style: italic;
+  }
+
+  /* ===== Errors ===== */
+  .error {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: rgba(180, 67, 42, 0.08);
+    border-left: 3px solid var(--accent);
+    color: var(--accent-deep);
+    font-size: 14px;
+    display: none;
+  }
+
+  .error.shown { display: block; }
+
+  /* ===== Footer ===== */
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer em {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 860px) {
+    .page { padding: 28px 20px 60px; }
+    header.masthead {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .masthead .edition, .masthead .date { text-align: left; }
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    .composer { padding: 24px 20px; }
+    .place-input {
+      padding: 14px 14px 14px 44px;
+      font-size: 15px;
+    }
+    .add-btn {
+      position: static;
+      transform: none;
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+    }
+    .place-input-wrap { display: flex; flex-direction: column; }
+    .loading-indicator { right: 16px; }
+    .stats { grid-template-columns: 1fr; }
+    .stat { border-right: none; border-bottom: 1px solid var(--line); }
+    .stat:last-child { border-bottom: none; }
+    .timeline-item { grid-template-columns: 44px 1fr; gap: 14px; }
+    .timeline-item .marker .dot { width: 28px; height: 28px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="wordmark">
+      <svg class="mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 4 C10 10, 10 16, 16 16 C22 16, 22 10, 16 4 Z" fill="#b4432a" opacity="0.85"/>
+        <path d="M4 16 C10 10, 16 10, 16 16 C16 22, 10 22, 4 16 Z" fill="#b4432a" opacity="0.7"/>
+        <path d="M28 16 C22 10, 16 10, 16 16 C16 22, 22 22, 28 16 Z" fill="#b4432a" opacity="0.7"/>
+        <path d="M16 28 C10 22, 10 16, 16 16 C22 16, 22 22, 16 28 Z" fill="#b4432a" opacity="0.85"/>
+        <circle cx="16" cy="16" r="2.5" fill="#f5efe6"/>
+      </svg>
+      <h1>Petal</h1>
+    </div>
+    <div class="edition">The Date Planner <span class="dot"></span> No. 01</div>
+    <div class="date" id="today-date"></div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h2>Fewer wrong turns,<br/><em>more time together.</em></h2>
+      <p class="lede">Drop in the places you both want to visit today. We'll quietly work out the fastest order to see them all — so the only thing you need to plan is what to talk about between stops.</p>
+    </div>
+    <aside class="hero-side">
+      <div class="label">How it works</div>
+      <ol class="how-list">
+        <li><span>Add every place on your wishlist, in any order.</span></li>
+        <li><span>Pick where you're starting from — home, or stop one.</span></li>
+        <li><span>We find the shortest route and open it in Google Maps.</span></li>
+      </ol>
+    </aside>
+  </section>
+
+  <main class="composer">
+    <div class="composer-head">
+      <h3>Today's itinerary</h3>
+      <div class="counter"><strong id="stop-count">0</strong> places added</div>
+    </div>
+
+    <div class="place-input-wrap">
+      <svg class="pin-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 1 1 16 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <input type="text" class="place-input" id="place-input" placeholder="A restaurant, park, bookshop, bar…" autocomplete="off" spellcheck="false" />
+      <div class="loading-indicator" id="loading-indicator"></div>
+      <button class="add-btn" id="add-btn" disabled>Add</button>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="search-hint" id="search-hint"></div>
+
+    <div class="start-controls">
+      <strong style="font-weight: 500; color: var(--ink);">Start from:</strong>
+      <label><input type="radio" name="start-mode" value="first" checked /> The first place I added</label>
+      <label><input type="radio" name="start-mode" value="current" /> My current location</label>
+    </div>
+
+    <div class="stops-section">
+      <div class="stops-header">
+        <h4>Your stops</h4>
+        <div class="hint" id="stops-hint">Add at least 2 places to optimize a route.</div>
+      </div>
+      <ul class="stops-list" id="stops-list"></ul>
+      <div class="stops-empty" id="stops-empty">No stops yet — start typing above.</div>
+    </div>
+
+    <div class="options">
+      <label>
+        Travel by:
+        <select id="travel-mode">
+          <option value="driving">Driving</option>
+          <option value="walking">Walking</option>
+          <option value="cycling">Cycling</option>
+        </select>
+      </label>
+      <label>
+        <input type="checkbox" id="return-start" /> Return to start at the end
+      </label>
+    </div>
+
+    <div class="optimize-row">
+      <button class="optimize-btn" id="optimize-btn" disabled>
+        Find the best route <span class="arrow">→</span>
+      </button>
+      <button class="clear-btn" id="clear-btn">Clear all</button>
+    </div>
+
+    <div class="error" id="error"></div>
+  </main>
+
+  <section class="result" id="result">
+    <div class="result-head">
+      <div class="kicker">Your Optimized Day</div>
+      <h3 id="result-title">Here's your route.</h3>
+      <div class="subtitle" id="result-subtitle"></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="timeline" id="timeline"></div>
+
+    <a class="maps-link" id="maps-link" href="#" target="_blank" rel="noopener">
+      <svg class="g-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+      </svg>
+      <span>Open in Google Maps <em>— turn by turn</em> →</span>
+    </a>
+  </section>
+
+  <footer>
+    <div>Made with care for two. Uses <em>OpenStreetMap</em> &amp; <em>OSRM</em>.</div>
+    <div>Hand it off to <em>Google Maps</em> when you're ready to drive.</div>
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   Petal — Date Route Optimizer
+   Single-file public deployable HTML.
+
+   Stack:
+   - Nominatim (OpenStreetMap) for place search/geocoding.
+   - OSRM public demo for travel-time distance matrix.
+   - Held-Karp DP (optimal TSP) for ≤ 11 stops; nearest
+     neighbor + 2-opt for larger.
+   - Opens Google Maps with waypoints in optimized order.
+   ========================================================= */
+
+(() => {
+  'use strict';
+
+  // ---------- State ----------
+  const state = {
+    stops: [],          // [{id, name, addr, lat, lon}]
+    userLocation: null, // {lat, lon} or null
+    lastRoute: null,
+  };
+
+  // ---------- DOM ----------
+  const $ = id => document.getElementById(id);
+  const input = $('place-input');
+  const suggestionsEl = $('suggestions');
+  const addBtn = $('add-btn');
+  const loadingIndicator = $('loading-indicator');
+  const stopsListEl = $('stops-list');
+  const stopsEmptyEl = $('stops-empty');
+  const stopCountEl = $('stop-count');
+  const stopsHintEl = $('stops-hint');
+  const optimizeBtn = $('optimize-btn');
+  const clearBtn = $('clear-btn');
+  const errorEl = $('error');
+  const resultEl = $('result');
+  const statsEl = $('stats');
+  const timelineEl = $('timeline');
+  const mapsLink = $('maps-link');
+  const resultTitle = $('result-title');
+  const resultSubtitle = $('result-subtitle');
+  const travelModeEl = $('travel-mode');
+  const returnStartEl = $('return-start');
+  const startModeEls = document.querySelectorAll('input[name="start-mode"]');
+
+  // ---------- Date in header ----------
+  (() => {
+    const d = new Date();
+    const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+    $('today-date').textContent = d.toLocaleDateString(undefined, opts);
+  })();
+
+  // ---------- Place search ----------
+  // Primary: Photon (Komoot) — CORS-friendly, no key, no referer issues.
+  // Fallback: Nominatim (OpenStreetMap) — same data source but pickier about CORS.
+  const PHOTON = 'https://photon.komoot.io/api/';
+  const NOMINATIM = 'https://nominatim.openstreetmap.org/search';
+  let searchTimer = null;
+  let activeQuery = '';
+  let currentSuggestions = [];
+  let highlightedIndex = -1;
+  let pendingPick = null;
+
+  // Approximate location for biasing search results (city-level).
+  // Populated by IP geolocation at page load, no permission prompt needed.
+  let searchBias = null; // { lat, lon, label }
+
+  async function searchPlaces(q) {
+    // Try Photon first — supports lat/lon bias directly
+    try {
+      const params = new URLSearchParams({ q, limit: '8' });
+      if (searchBias) {
+        params.set('lat', searchBias.lat);
+        params.set('lon', searchBias.lon);
+        // zoom ~12 = city/metro radius; location_bias_scale low = strongly
+        // prefer proximity over global prominence.
+        params.set('zoom', '12');
+        params.set('location_bias_scale', '0.1');
+      }
+      const url = `${PHOTON}?${params.toString()}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Photon HTTP ' + res.status);
+      const data = await res.json();
+      let normalized = (data.features || []).map(photonToItem).filter(Boolean);
+      // Re-sort by distance to bias as a secondary boost (Photon bias alone
+      // can still put a famous-but-distant match first).
+      if (searchBias && normalized.length > 0) {
+        normalized = rerankByDistance(normalized, searchBias);
+      }
+      if (normalized.length > 0) return normalized.slice(0, 6);
+      // Fall through to Nominatim if Photon returns nothing
+    } catch (err) {
+      console.warn('Photon search failed, trying Nominatim:', err.message);
+    }
+
+    // Fallback: Nominatim. Use viewbox for bias if we have a location.
+    const params = new URLSearchParams({
+      q, format: 'json', addressdetails: '1', limit: '8',
+    });
+    if (searchBias) {
+      // Viewbox is a ~100km square around the user; bounded=0 means it's a preference, not a hard limit.
+      const { lat, lon } = searchBias;
+      const d = 0.8; // ~90km at equator; good enough for "same metro" bias
+      params.set('viewbox', `${lon - d},${lat + d},${lon + d},${lat - d}`);
+      params.set('bounded', '0');
+    }
+    const res = await fetch(`${NOMINATIM}?${params.toString()}`, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error('Nominatim HTTP ' + res.status);
+    const data = await res.json();
+    let items = data.map(nominatimToItem);
+    if (searchBias && items.length > 0) items = rerankByDistance(items, searchBias);
+    return items.slice(0, 6);
+  }
+
+  // Re-rank results with a soft preference for proximity to the user.
+  // Uses a blended score: original rank + distance penalty. This keeps
+  // exact-name matches at the top but pushes faraway duplicates down.
+  function rerankByDistance(items, bias) {
+    const scored = items.map((item, i) => {
+      const dKm = haversineKm(bias, { lat: item.lat, lon: item.lon });
+      // Distance penalty: log-scaled so 10km vs 50km matters more than 5000 vs 10000km
+      const distPenalty = Math.log10(Math.max(dKm, 1)) * 1.5;
+      return { item, score: i + distPenalty };
+    });
+    scored.sort((a, b) => a.score - b.score);
+    return scored.map(s => s.item);
+  }
+
+  function haversineKm(a, b) {
+    const R = 6371;
+    const toRad = x => x * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLon = toRad(b.lon - a.lon);
+    const la1 = toRad(a.lat), la2 = toRad(b.lat);
+    const h = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  // Normalize Photon GeoJSON feature -> our common shape { display_name, lat, lon, primary, addr }
+  function photonToItem(feature) {
+    if (!feature || !feature.geometry || !feature.geometry.coordinates) return null;
+    const [lon, lat] = feature.geometry.coordinates;
+    const p = feature.properties || {};
+    const primary = p.name || p.street || p.city || p.country || 'Unknown place';
+    const addrBits = [
+      p.street && p.housenumber ? `${p.street} ${p.housenumber}` : p.street,
+      p.district,
+      p.city || p.town || p.village,
+      p.state,
+      p.country,
+    ].filter(Boolean);
+    // Dedup neighbouring duplicates (e.g. city === district)
+    const addrParts = [];
+    for (const bit of addrBits) {
+      if (addrParts[addrParts.length - 1] !== bit && bit !== primary) addrParts.push(bit);
+    }
+    const addr = addrParts.slice(0, 3).join(', ');
+    const display_name = [primary, ...addrParts].join(', ');
+    return { display_name, lat, lon, _primary: primary, _addr: addr };
+  }
+
+  function nominatimToItem(item) {
+    return {
+      display_name: item.display_name,
+      lat: parseFloat(item.lat),
+      lon: parseFloat(item.lon),
+      _primary: null,
+      _addr: null,
+    };
+  }
+
+  function formatSuggestion(item) {
+    // If we already pre-computed (Photon path), use it.
+    if (item._primary) return { primary: item._primary, addr: item._addr || '' };
+    // Otherwise parse display_name (Nominatim path).
+    const parts = (item.display_name || '').split(',').map(s => s.trim());
+    const primary = parts[0] || 'Unknown place';
+    const addrParts = parts.slice(1);
+    const addr = addrParts.slice(0, 3).join(', ');
+    return { primary, addr };
+  }
+
+  function renderSuggestions(items) {
+    currentSuggestions = items;
+    highlightedIndex = -1;
+    if (!items || items.length === 0) {
+      suggestionsEl.classList.remove('active');
+      suggestionsEl.innerHTML = '';
+      return;
+    }
+    suggestionsEl.innerHTML = items.map((item, i) => {
+      const { primary, addr } = formatSuggestion(item);
+      return `<div class="suggestion" data-index="${i}">
+        <strong>${escapeHtml(primary)}</strong>
+        ${addr ? `<span>${escapeHtml(addr)}</span>` : ''}
+      </div>`;
+    }).join('');
+    suggestionsEl.classList.add('active');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    addBtn.disabled = !pendingPick && q.length < 2;
+    if (searchTimer) clearTimeout(searchTimer);
+    if (q.length < 2) {
+      renderSuggestions([]);
+      loadingIndicator.classList.remove('active');
+      return;
+    }
+    activeQuery = q;
+    loadingIndicator.classList.add('active');
+    searchTimer = setTimeout(async () => {
+      try {
+        const items = await searchPlaces(q);
+        if (q !== activeQuery) return; // stale
+        loadingIndicator.classList.remove('active');
+        renderSuggestions(items);
+        hideError();
+      } catch (err) {
+        loadingIndicator.classList.remove('active');
+        console.error('Search error:', err);
+        showError(`Search couldn't reach the geocoder (${err.message}). Check your connection or try again.`);
+      }
+    }, 320);
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (!suggestionsEl.classList.contains('active')) {
+      if (e.key === 'Enter' && input.value.trim().length >= 2) {
+        e.preventDefault();
+        addBtn.click();
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlightedIndex = Math.min(highlightedIndex + 1, currentSuggestions.length - 1);
+      updateHighlight();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlightedIndex = Math.max(highlightedIndex - 1, 0);
+      updateHighlight();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0) {
+        pickSuggestion(highlightedIndex);
+      } else if (currentSuggestions.length > 0) {
+        pickSuggestion(0);
+      } else {
+        addBtn.click();
+      }
+    } else if (e.key === 'Escape') {
+      renderSuggestions([]);
+    }
+  });
+
+  function updateHighlight() {
+    suggestionsEl.querySelectorAll('.suggestion').forEach((el, i) => {
+      el.classList.toggle('highlighted', i === highlightedIndex);
+    });
+  }
+
+  suggestionsEl.addEventListener('click', (e) => {
+    const el = e.target.closest('.suggestion');
+    if (!el) return;
+    const idx = parseInt(el.dataset.index, 10);
+    pickSuggestion(idx);
+  });
+
+  function pickSuggestion(i) {
+    const item = currentSuggestions[i];
+    if (!item) return;
+    const { primary, addr } = formatSuggestion(item);
+    pendingPick = {
+      name: primary,
+      addr,
+      lat: parseFloat(item.lat),
+      lon: parseFloat(item.lon),
+    };
+    input.value = primary;
+    renderSuggestions([]);
+    addBtn.disabled = false;
+    addBtn.focus();
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!suggestionsEl.contains(e.target) && e.target !== input) {
+      renderSuggestions([]);
+    }
+  });
+
+  // ---------- Add stop ----------
+  addBtn.addEventListener('click', async () => {
+    hideError();
+    let stop = pendingPick;
+    if (!stop) {
+      // User typed but didn't pick — do a fresh search and take top result
+      const q = input.value.trim();
+      if (q.length < 2) return;
+      try {
+        loadingIndicator.classList.add('active');
+        const items = await searchPlaces(q);
+        loadingIndicator.classList.remove('active');
+        if (items.length === 0) {
+          showError(`Couldn't find a place matching "${q}". Try adding a city name.`);
+          return;
+        }
+        const top = items[0];
+        const { primary, addr } = formatSuggestion(top);
+        stop = {
+          name: primary, addr,
+          lat: parseFloat(top.lat), lon: parseFloat(top.lon),
+        };
+      } catch (err) {
+        loadingIndicator.classList.remove('active');
+        showError('Had trouble reaching the search service. Please try again.');
+        return;
+      }
+    }
+    addStop(stop);
+    input.value = '';
+    pendingPick = null;
+    addBtn.disabled = true;
+    renderSuggestions([]);
+    input.focus();
+  });
+
+  function addStop({name, addr, lat, lon}) {
+    state.stops.push({
+      id: Math.random().toString(36).slice(2),
+      name, addr, lat, lon,
+    });
+    renderStops();
+    // Hide any previous result since stops have changed
+    hideResult();
+  }
+
+  function removeStop(id) {
+    state.stops = state.stops.filter(s => s.id !== id);
+    renderStops();
+    hideResult();
+  }
+
+  function renderStops() {
+    stopCountEl.textContent = state.stops.length;
+    if (state.stops.length === 0) {
+      stopsListEl.innerHTML = '';
+      stopsEmptyEl.style.display = 'block';
+    } else {
+      stopsEmptyEl.style.display = 'none';
+      stopsListEl.innerHTML = state.stops.map((s, i) => `
+        <li class="stop" data-id="${s.id}">
+          <div class="num">${i + 1}</div>
+          <div class="info">
+            <div class="name">${escapeHtml(s.name)}</div>
+            ${s.addr ? `<div class="addr">${escapeHtml(s.addr)}</div>` : ''}
+          </div>
+          <button class="remove" data-id="${s.id}" aria-label="Remove stop">×</button>
+        </li>
+      `).join('');
+    }
+    optimizeBtn.disabled = state.stops.length < 2;
+    if (state.stops.length < 2) {
+      stopsHintEl.textContent = 'Add at least 2 places to optimize a route.';
+    } else {
+      stopsHintEl.textContent = `${state.stops.length} stops — ready to optimize.`;
+    }
+  }
+
+  stopsListEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.remove');
+    if (!btn) return;
+    removeStop(btn.dataset.id);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (state.stops.length === 0) return;
+    if (confirm('Clear all stops?')) {
+      state.stops = [];
+      renderStops();
+      hideResult();
+    }
+  });
+
+  // ---------- Start-mode: current location ----------
+  startModeEls.forEach(el => {
+    el.addEventListener('change', async () => {
+      if (el.value === 'current' && el.checked) {
+        try {
+          const loc = await getUserLocation();
+          state.userLocation = loc;
+          hideError();
+        } catch (err) {
+          // Try IP-based fallback so we at least have a city-accurate origin
+          let fallback = null;
+          try { fallback = await ipLocate(); } catch (_) {}
+          if (fallback) {
+            state.userLocation = fallback;
+            showError(`Using your approximate location (${fallback.label || 'city-level accuracy'}). For a more precise start, allow location access — this page must also be served over https:// or localhost.`);
+          } else {
+            state.userLocation = null;
+            document.querySelector('input[name="start-mode"][value="first"]').checked = true;
+            showError(explainGeoError(err));
+          }
+        }
+      }
+    });
+  });
+
+  function explainGeoError(err) {
+    // Translate common geolocation failures into actionable guidance.
+    if (!navigator.geolocation) {
+      return "Your browser doesn't support geolocation. Using the first stop as the start instead.";
+    }
+    const code = err && err.code;
+    // 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT
+    if (code === 1) {
+      return "Location access was blocked. Check your browser's site permissions, or note that geolocation only works on https:// pages and localhost — not file://.";
+    }
+    if (code === 2) {
+      return "Your device couldn't determine its position. Try again, or use the first stop as the start.";
+    }
+    if (code === 3) {
+      return "Getting your location took too long. Try again near a window, or use the first stop as the start.";
+    }
+    return "Couldn't get your location. Using the first stop as the start instead.";
+  }
+
+  function getUserLocation() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) return reject(new Error('No geolocation'));
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+        err => reject(err),
+        { timeout: 12000, enableHighAccuracy: false, maximumAge: 60000 }
+      );
+    });
+  }
+
+  // IP-based coarse geolocation. No permission prompt, no key.
+  // Used (a) to bias search results at page load, and (b) as a fallback
+  // when browser geolocation is denied or unavailable.
+  async function ipLocate() {
+    // Try a few free, no-key, CORS-enabled services in order.
+    const providers = [
+      {
+        url: 'https://ipapi.co/json/',
+        parse: d => ({ lat: d.latitude, lon: d.longitude, label: [d.city, d.country_name].filter(Boolean).join(', ') }),
+      },
+      {
+        url: 'https://ipwho.is/',
+        parse: d => d.success ? ({ lat: d.latitude, lon: d.longitude, label: [d.city, d.country].filter(Boolean).join(', ') }) : null,
+      },
+    ];
+    for (const p of providers) {
+      try {
+        const res = await fetch(p.url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        const loc = p.parse(data);
+        if (loc && typeof loc.lat === 'number' && typeof loc.lon === 'number') return loc;
+      } catch (_) { /* try next */ }
+    }
+    throw new Error('All IP lookup providers failed');
+  }
+
+  // Kick off IP geolocation in the background to bias search results.
+  (async () => {
+    try {
+      const bias = await ipLocate();
+      searchBias = bias;
+      console.log('Search biased to:', bias.label || `${bias.lat}, ${bias.lon}`);
+      const hintEl = document.getElementById('search-hint');
+      if (hintEl && bias.label) {
+        hintEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>Showing results near ${escapeHtml(bias.label)}`;
+        hintEl.classList.add('shown');
+      }
+    } catch (err) {
+      console.warn('IP geolocation unavailable, search results will not be location-biased:', err.message);
+    }
+  })();
+
+  // ---------- OSRM distance matrix ----------
+  // Uses the public OSRM demo server. For driving only.
+  // For walking/cycling we fall back to straight-line distance with a speed
+  // assumption, which is imperfect but adequate for ordering purposes.
+  const OSRM = 'https://router.project-osrm.org';
+
+  async function getTravelMatrix(points, mode) {
+    // points: [{lat, lon}, ...]
+    if (mode === 'driving') {
+      try {
+        return await osrmMatrix(points);
+      } catch (err) {
+        console.warn('OSRM failed, falling back to haversine.', err);
+        return haversineMatrix(points, 50); // 50 km/h fallback
+      }
+    }
+    // Walking / cycling: haversine with speed assumption
+    const speed = mode === 'walking' ? 5 : 18; // km/h
+    return haversineMatrix(points, speed);
+  }
+
+  async function osrmMatrix(points) {
+    const coords = points.map(p => `${p.lon},${p.lat}`).join(';');
+    const url = `${OSRM}/table/v1/driving/${coords}?annotations=duration,distance`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('OSRM matrix failed');
+    const data = await res.json();
+    if (data.code !== 'Ok') throw new Error('OSRM: ' + data.code);
+    // durations in seconds, distances in meters
+    return {
+      durations: data.durations, // 2D array
+      distances: data.distances,
+    };
+  }
+
+  function haversineMatrix(points, speedKmh) {
+    const n = points.length;
+    const durations = Array.from({ length: n }, () => new Array(n).fill(0));
+    const distances = Array.from({ length: n }, () => new Array(n).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        const d = haversine(points[i], points[j]); // meters
+        distances[i][j] = d;
+        durations[i][j] = (d / 1000) / speedKmh * 3600; // seconds
+      }
+    }
+    return { durations, distances };
+  }
+
+  function haversine(a, b) {
+    const R = 6371000;
+    const toRad = x => x * Math.PI / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLon = toRad(b.lon - a.lon);
+    const la1 = toRad(a.lat), la2 = toRad(b.lat);
+    const h = Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+
+  // ---------- TSP solvers ----------
+
+  // Held-Karp dynamic programming — optimal.
+  // Returns { order: [indices], cost }
+  // startIdx is fixed. If returnToStart is true, path ends at startIdx.
+  // If false, ends anywhere.
+  // Works for n ≤ 15 comfortably.
+  function heldKarp(matrix, startIdx, returnToStart) {
+    const n = matrix.length;
+    const FULL = (1 << n) - 1;
+    // dp[mask][i] = min cost to reach state mask ending at i, having visited all bits in mask (mask includes start and i)
+    const dp = new Array(1 << n);
+    const parent = new Array(1 << n);
+    for (let i = 0; i < (1 << n); i++) {
+      dp[i] = new Array(n).fill(Infinity);
+      parent[i] = new Array(n).fill(-1);
+    }
+    dp[1 << startIdx][startIdx] = 0;
+
+    for (let mask = 0; mask <= FULL; mask++) {
+      if (!(mask & (1 << startIdx))) continue;
+      for (let u = 0; u < n; u++) {
+        if (!(mask & (1 << u))) continue;
+        if (dp[mask][u] === Infinity) continue;
+        for (let v = 0; v < n; v++) {
+          if (mask & (1 << v)) continue;
+          const newMask = mask | (1 << v);
+          const cost = dp[mask][u] + matrix[u][v];
+          if (cost < dp[newMask][v]) {
+            dp[newMask][v] = cost;
+            parent[newMask][v] = u;
+          }
+        }
+      }
+    }
+
+    // Find best end state
+    let bestEnd = -1, bestCost = Infinity;
+    if (returnToStart) {
+      for (let u = 0; u < n; u++) {
+        if (u === startIdx) continue;
+        const c = dp[FULL][u] + matrix[u][startIdx];
+        if (c < bestCost) { bestCost = c; bestEnd = u; }
+      }
+    } else {
+      for (let u = 0; u < n; u++) {
+        if (u === startIdx) continue;
+        if (dp[FULL][u] < bestCost) { bestCost = dp[FULL][u]; bestEnd = u; }
+      }
+    }
+
+    // Reconstruct
+    const order = [];
+    let mask = FULL, cur = bestEnd;
+    while (cur !== -1) {
+      order.push(cur);
+      const p = parent[mask][cur];
+      mask ^= (1 << cur);
+      cur = p;
+    }
+    order.reverse();
+    if (returnToStart) order.push(startIdx);
+    return { order, cost: bestCost };
+  }
+
+  // Nearest-neighbor + 2-opt — heuristic for larger n.
+  function nearestNeighbor2opt(matrix, startIdx, returnToStart) {
+    const n = matrix.length;
+    // Nearest neighbor
+    const visited = new Array(n).fill(false);
+    const order = [startIdx];
+    visited[startIdx] = true;
+    for (let step = 1; step < n; step++) {
+      const u = order[order.length - 1];
+      let best = -1, bestD = Infinity;
+      for (let v = 0; v < n; v++) {
+        if (!visited[v] && matrix[u][v] < bestD) {
+          bestD = matrix[u][v];
+          best = v;
+        }
+      }
+      visited[best] = true;
+      order.push(best);
+    }
+    if (returnToStart) order.push(startIdx);
+
+    // 2-opt
+    const pathCost = (arr) => {
+      let c = 0;
+      for (let i = 0; i < arr.length - 1; i++) c += matrix[arr[i]][arr[i+1]];
+      return c;
+    };
+
+    let improved = true;
+    const segStart = 1; // keep startIdx fixed
+    const segEnd = returnToStart ? order.length - 2 : order.length - 1;
+    while (improved) {
+      improved = false;
+      for (let i = segStart; i < segEnd; i++) {
+        for (let k = i + 1; k <= segEnd; k++) {
+          // Reverse order[i..k]
+          const a = order[i - 1], b = order[i], c = order[k], d = order[k + 1];
+          if (d === undefined) {
+            // Endpoint, only one side
+            const oldD = matrix[a][b];
+            const newD = matrix[a][c];
+            if (newD < oldD) {
+              order.splice(i, k - i + 1, ...order.slice(i, k + 1).reverse());
+              improved = true;
+            }
+          } else {
+            const oldD = matrix[a][b] + matrix[c][d];
+            const newD = matrix[a][c] + matrix[b][d];
+            if (newD + 1e-9 < oldD) {
+              order.splice(i, k - i + 1, ...order.slice(i, k + 1).reverse());
+              improved = true;
+            }
+          }
+        }
+      }
+    }
+
+    return { order, cost: pathCost(order) };
+  }
+
+  function solveTSP(matrix, startIdx, returnToStart) {
+    const n = matrix.length;
+    if (n <= 12) {
+      return heldKarp(matrix, startIdx, returnToStart);
+    }
+    return nearestNeighbor2opt(matrix, startIdx, returnToStart);
+  }
+
+  // ---------- Baseline (input order) cost ----------
+  function pathCost(matrix, order) {
+    let c = 0;
+    for (let i = 0; i < order.length - 1; i++) c += matrix[order[i]][order[i+1]];
+    return c;
+  }
+
+  // ---------- Optimize flow ----------
+  optimizeBtn.addEventListener('click', async () => {
+    hideError();
+    if (state.stops.length < 2) return;
+
+    const startMode = document.querySelector('input[name="start-mode"]:checked').value;
+    const mode = travelModeEl.value;
+    const returnToStart = returnStartEl.checked;
+
+    // Build point list. If startMode === 'current', prepend user location.
+    let points = state.stops.map(s => ({ lat: s.lat, lon: s.lon }));
+    let labels = state.stops.map(s => ({ name: s.name, addr: s.addr, lat: s.lat, lon: s.lon }));
+    let startIdx = 0;
+
+    if (startMode === 'current') {
+      if (!state.userLocation) {
+        optimizeBtn.classList.add('working');
+        optimizeBtn.textContent = 'Locating…';
+        try {
+          state.userLocation = await getUserLocation();
+        } catch (err) {
+          // Try IP-based fallback before giving up
+          try {
+            state.userLocation = await ipLocate();
+          } catch (_) {
+            optimizeBtn.classList.remove('working');
+            optimizeBtn.innerHTML = 'Find the best route <span class="arrow">→</span>';
+            showError(explainGeoError(err));
+            document.querySelector('input[name="start-mode"][value="first"]').checked = true;
+            return;
+          }
+        }
+      }
+      points = [state.userLocation, ...points];
+      labels = [
+        { name: 'Your current location', addr: state.userLocation.label || '', lat: state.userLocation.lat, lon: state.userLocation.lon, isStart: true },
+        ...labels
+      ];
+      startIdx = 0;
+    }
+
+    optimizeBtn.classList.add('working');
+    optimizeBtn.innerHTML = 'Finding the best route…';
+
+    let matrix;
+    try {
+      matrix = await getTravelMatrix(points, mode);
+    } catch (err) {
+      optimizeBtn.classList.remove('working');
+      optimizeBtn.innerHTML = 'Find the best route <span class="arrow">→</span>';
+      showError('Could not compute travel times. Please try again.');
+      return;
+    }
+
+    const durations = matrix.durations;
+    state._lastDurations = durations;
+    const { order, cost } = solveTSP(durations, startIdx, returnToStart);
+
+    // Baseline: user's original input order (with start + optional return)
+    let baselineOrder = points.map((_, i) => i);
+    // baselineOrder already goes 0..n-1 which is [start, then input order of stops]
+    if (returnToStart) baselineOrder = [...baselineOrder, startIdx];
+    const baselineCost = pathCost(durations, baselineOrder);
+
+    const distances = matrix.distances || null;
+    const totalDist = distances
+      ? pathCostOn(distances, order)
+      : null;
+
+    state.lastRoute = {
+      order, cost, baselineCost, totalDist,
+      points, labels, mode, returnToStart, startMode,
+    };
+
+    renderResult();
+
+    optimizeBtn.classList.remove('working');
+    optimizeBtn.innerHTML = 'Re-optimize <span class="arrow">→</span>';
+  });
+
+  function pathCostOn(mat, order) {
+    let c = 0;
+    for (let i = 0; i < order.length - 1; i++) c += mat[order[i]][order[i+1]];
+    return c;
+  }
+
+  // ---------- Render result ----------
+  function renderResult() {
+    const r = state.lastRoute;
+    if (!r) return;
+
+    const mins = Math.round(r.cost / 60);
+    const baselineMins = Math.round(r.baselineCost / 60);
+    const saved = Math.max(0, baselineMins - mins);
+    const savedPct = baselineMins > 0 ? Math.round(saved / baselineMins * 100) : 0;
+
+    const hrs = Math.floor(mins / 60);
+    const minRem = mins % 60;
+    const timeStr = hrs > 0
+      ? `${hrs}<span class="unit">h</span> ${minRem}<span class="unit">m</span>`
+      : `${mins}<span class="unit">m</span>`;
+
+    let distStr = '—';
+    if (r.totalDist != null) {
+      const km = r.totalDist / 1000;
+      distStr = km >= 10 ? `${km.toFixed(0)}<span class="unit">km</span>` : `${km.toFixed(1)}<span class="unit">km</span>`;
+    }
+
+    // Stats
+    const stats = [
+      { num: timeStr, lbl: 'Total travel', sub: '' },
+      { num: `${r.order.length}<span class="unit">stops</span>`, lbl: 'On your day', sub: '' },
+      saved > 0
+        ? { num: `<em>−${saved}</em><span class="unit">min</span>`, lbl: 'Time saved vs. your order', sub: savedPct >= 5 ? `${savedPct}% faster` : '' }
+        : { num: distStr, lbl: 'Distance', sub: '' },
+    ];
+    statsEl.innerHTML = stats.map(s => `
+      <div class="stat">
+        <div class="num">${s.num}</div>
+        <div class="lbl">${s.lbl}</div>
+        ${s.sub ? `<div class="sublbl">${s.sub}</div>` : ''}
+      </div>
+    `).join('');
+
+    // Timeline
+    const durations = getLastDurations();
+    timelineEl.innerHTML = r.order.map((idx, i) => {
+      const place = r.labels[idx];
+      const isStart = i === 0;
+      const isEnd = i === r.order.length - 1;
+      const nextIdx = r.order[i + 1];
+      const legMins = nextIdx != null
+        ? Math.round(durations[idx][nextIdx] / 60)
+        : null;
+      const positionCls = isStart ? 'start' : (isEnd && r.returnToStart ? 'end' : '');
+      const displayMarker = isStart ? '✦' : (i + 1);
+
+      return `
+        <div class="timeline-item ${positionCls}">
+          <div class="marker">
+            <div class="dot">${displayMarker}</div>
+            <div class="line"></div>
+          </div>
+          <div class="content">
+            <div class="stop-name">${escapeHtml(place.name)}</div>
+            ${place.addr ? `<div class="stop-addr">${escapeHtml(place.addr)}</div>` : ''}
+            ${legMins != null ? `
+              <div class="travel">
+                <span class="arrow-icon">↓</span>
+                <span>${travelVerb(r.mode)} ${formatMins(legMins)} to next stop</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Maps link
+    const mapsUrl = buildGoogleMapsUrl(r);
+    mapsLink.href = mapsUrl;
+
+    // Subtitle flavor
+    if (saved > 0) {
+      resultTitle.innerHTML = `Trimmed your route by <em style="color:var(--accent);font-style:italic">${saved} minute${saved===1?'':'s'}</em>.`;
+      resultSubtitle.textContent = `The order below covers everything in the shortest total time.`;
+    } else {
+      resultTitle.innerHTML = `Your route is already <em style="color:var(--accent);font-style:italic">neatly ordered</em>.`;
+      resultSubtitle.textContent = `No improvement possible — nice instincts.`;
+    }
+
+    resultEl.classList.add('shown');
+    // Smooth scroll
+    setTimeout(() => resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  function getLastDurations() {
+    // Recompute durations from lastRoute by storing them; to avoid re-calling,
+    // we re-derive from labels using haversine? No — we need original matrix.
+    // Store it on state instead.
+    return state._lastDurations;
+  }
+
+  function travelVerb(mode) {
+    return mode === 'walking' ? 'Walk' : mode === 'cycling' ? 'Cycle' : 'Drive';
+  }
+
+  function formatMins(m) {
+    if (m < 1) return 'under a minute';
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m/60), rem = m % 60;
+    return rem === 0 ? `${h} h` : `${h} h ${rem} m`;
+  }
+
+  function buildGoogleMapsUrl(r) {
+    // https://www.google.com/maps/dir/?api=1&origin=...&destination=...&waypoints=a|b|c&travelmode=driving
+    const pts = r.order.map(i => r.labels[i]);
+    const origin = `${pts[0].lat},${pts[0].lon}`;
+    const destPoint = pts[pts.length - 1];
+    const destination = `${destPoint.lat},${destPoint.lon}`;
+    const waypointPts = pts.slice(1, -1);
+    const waypoints = waypointPts.map(p => `${p.lat},${p.lon}`).join('|');
+    const params = new URLSearchParams({
+      api: '1',
+      origin,
+      destination,
+      travelmode: r.mode === 'cycling' ? 'bicycling' : r.mode,
+    });
+    if (waypoints) params.set('waypoints', waypoints);
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
+  // ---------- UI helpers ----------
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.add('shown');
+  }
+  function hideError() {
+    errorEl.classList.remove('shown');
+    errorEl.textContent = '';
+  }
+  function hideResult() {
+    resultEl.classList.remove('shown');
+  }
+
+  // Initial render
+  renderStops();
+})();
+</script>
+
+</body>
+</html>
