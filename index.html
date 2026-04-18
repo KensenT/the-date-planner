@@ -1509,7 +1509,7 @@
       Routing by <a href="https://project-osrm.org/" target="_blank" rel="noopener">OSRM</a>.
     </div>
     <div><a id="open-settings">⚙ Settings</a> &nbsp;·&nbsp; Hand it off to <em>Google Maps</em> when you're ready to drive.</div>
-    <div class="footer-copyright">© 2026 Kensen &nbsp;·&nbsp; <a href="https://github.com/kensent/the-date-planner/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></div>
+    <div class="footer-copyright">© 2026 Kensen &nbsp;·&nbsp; <a href="https://github.com/KensenT/petal-the-date-planner/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></div>
   </footer>
 
 </div>
@@ -1670,15 +1670,6 @@
           },
         };
       }
-      // Debug log — helps diagnose cases where results look wrong.
-      // Check your browser's console to confirm the country filter and
-      // bias are being applied as expected.
-      console.log('[Petal] Google Places request:', {
-        input: q,
-        includedRegionCodes: body.includedRegionCodes,
-        locationBias: body.locationBias,
-        searchBias,
-      });
       let res;
       try {
         res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
@@ -2538,14 +2529,6 @@
     try {
       const bias = await ipLocate();
       searchBias = bias;
-      const hasCoords = typeof bias.lat === 'number' && typeof bias.lon === 'number';
-      console.log('[Petal] Search biased to:', {
-        countryCode: bias.countryCode,
-        hasCoords,
-        label: bias.label,
-        lat: bias.lat,
-        lon: bias.lon,
-      });
       const hintEl = document.getElementById('search-hint');
       if (hintEl && bias.label) {
         const pin = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 7-8 13-8 13s-8-6-8-13a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
