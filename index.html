@@ -1086,6 +1086,40 @@
   }
   footer a:hover { border-bottom-color: var(--accent); }
 
+  .footer-copyright {
+    flex-basis: 100%;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px dotted var(--line-soft);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+  .footer-copyright a {
+    color: inherit;
+    border-bottom: 1px dotted var(--line);
+  }
+  .footer-copyright a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Attribution links are quieter than the Settings CTA — they're legal
+     requirement, not a primary affordance. */
+  .footer-attribution a {
+    color: var(--ink-soft);
+    border-bottom: 1px dotted var(--line);
+  }
+  .footer-attribution a:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    border-bottom-style: solid;
+  }
+  .footer-attribution em a {
+    color: inherit;
+    border-bottom-color: var(--line);
+  }
+
   /* ===== Settings modal ===== */
   .settings-overlay {
     position: fixed;
@@ -1469,8 +1503,13 @@
   </section>
 
   <footer>
-    <div>Made with care for two. Uses <em id="search-provider-label">OpenStreetMap</em> &amp; <em>OSRM</em>.</div>
+    <div class="footer-attribution">
+      Made with care for two. Place data from <em id="search-provider-label"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></em>
+      via <a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a>.
+      Routing by <a href="https://project-osrm.org/" target="_blank" rel="noopener">OSRM</a>.
+    </div>
     <div><a id="open-settings">⚙ Settings</a> &nbsp;·&nbsp; Hand it off to <em>Google Maps</em> when you're ready to drive.</div>
+    <div class="footer-copyright">© 2026 Kensen &nbsp;·&nbsp; <a href="https://github.com/kensent/the-date-planner/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></div>
   </footer>
 
 </div>
@@ -1758,7 +1797,12 @@
 
   function refreshProviderLabel() {
     const active = googleSearch.isActive();
-    providerLabel.textContent = active ? 'Google Places' : 'OpenStreetMap';
+    // Preserve proper attribution: OSM data requires a link to the copyright
+    // page (ODbL). Google Places has no equivalent requirement, so plain text
+    // is fine when it's the active provider.
+    providerLabel.innerHTML = active
+      ? 'Google Places'
+      : '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
     // Notification dot on the header settings button when no key is set —
     // subtle signal that there's an unused upgrade available.
     const gearBtn = document.getElementById('open-settings-header');
