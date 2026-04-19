@@ -59,6 +59,25 @@ Estimates are always tagged with their data source so you know what you're looki
 
 When Google can't route a mode in your area (e.g. cycling in Jakarta), Petal won't silently fall through to a made-up straight-line estimate — it'll tell you to pick a different mode instead.
 
+### Data persistence
+
+Your stops and settings persist across sessions — close the tab, reopen it tomorrow, and your itinerary is still there. Only the **Clear all** button wipes it. This is useful for building up a list of date ideas over a week and then optimizing the route the day of.
+
+Specifically, Petal saves (in your browser's localStorage, never sent to a server):
+
+- The list of stops — name, address, coordinates, Place ID
+- Your travel mode selection
+- The "Return to start at the end" checkbox
+- Your start-from choice (first stop vs. current location)
+
+A few things are intentionally *not* persisted:
+
+- The resolved GPS coordinates of your current location — the browser asks again each session anyway
+- The optimized route itself — it's recomputed on demand so traffic data stays fresh
+- The search input's in-progress text
+
+If you're in Incognito/Private mode, the persistence lives only for that window, which is the browser's behavior and probably what you want there.
+
 ## License
 
 [MIT](LICENSE). Do what you like with it.
